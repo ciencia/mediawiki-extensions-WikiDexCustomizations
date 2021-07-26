@@ -1,0 +1,70 @@
+{
+	"name": "WikiDexCustomizations",
+	"version": "1.0.0",
+	"author": [
+		"Jesús Martínez (Ciencia Al Poder)"
+	],
+	"url": "https://github.com/ciencia/mediawiki-extensions-WikiDexCustomizations",
+	"description": "Modificaciones para WikiDex.",
+	"license-name": "MIT",
+	"type": "other",
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\WikiDexCustomizations\\": "includes/"
+	},
+	"Hooks": {
+		"LinkerMakeExternalLink": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onLinkerMakeExternalLink",
+		"HtmlPageLinkRendererBegin": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onHtmlPageLinkRendererBegin",
+		"BeforePageDisplay": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onBeforePageDisplay",
+		"ResourceLoaderGetConfigVars": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onResourceLoaderGetConfigVars",
+		"OutputPageCheckLastModified": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onOutputPageCheckLastModified",
+		"GetCacheVaryCookies": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onGetCacheVaryCookies",
+		"SkinSubPageSubtitle": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onSkinSubPageSubtitle",
+		"UploadVerifyUpload": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onUploadVerifyUpload",
+		"WantedPages::getQueryInfo": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onWantedPagesgetQueryInfo"
+	},
+	"config": {
+		"WDNoExternalHostnameRegExp": {
+			"value": [],
+			"description": "List of regexp for hostnames to search on external links and handle as internal (no external link icon)"
+		},
+		"WDUserGroupsLinkIdentification": {
+			"value": [
+				"sysop",
+				"bot"
+			],
+			"description": "List of user groups that should be populated as css classes on user links in MediaWiki generated links"
+		},
+		"WDWebManifest": {
+			"value": "",
+			"description": "Location of the web manifest. Use path-relative links preferently"
+		},
+		"WDTwitterUser": {
+			"value": "",
+			"description": "Twitter account to attribute the content to. With the @ character"
+		},
+		"WDPopulateDiscordInviteUrlJSVar": {
+			"value": false,
+			"description": "Set to true to populate a wgDiscordInviteUrl JS variable with the contents of the discord-url MediaWiki message"
+		},
+		"WDUploadEPMaxWidth": {
+			"value": 0,
+			"description": "Max width of images uploaded of type episode"
+		},
+		"WDUploadEPMaxHeight": {
+			"value": 0,
+			"description": "Max height of images uploaded of type episode"
+		},
+		"WDUploadEPMaxSizeKB": {
+			"value": 0,
+			"description": "Max size in KB of images uploaded of type episode"
+		},
+		"WDUploadEPRegExp": {
+			"value": "",
+			"description": "Regexp to match titles of episodes"
+		}
+	},
+	"ConfigRegistry": {
+		"WikiDexCustomizations": "GlobalVarConfig::newInstance"
+	},
+	"manifest_version": 2
+}
