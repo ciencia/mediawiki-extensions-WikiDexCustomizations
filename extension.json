@@ -61,6 +61,10 @@
 		"WDUploadEPRegExp": {
 			"value": "",
 			"description": "Regexp to match titles of episodes"
+		},
+		"WDUploadEPRegExpExclude": {
+			"value": "",
+			"description": "Regexp to match titles of episodes to exclude from validation"
 		}
 	},
 	"ConfigRegistry": {

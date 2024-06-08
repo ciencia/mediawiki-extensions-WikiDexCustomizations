@@ -158,8 +158,9 @@ class Hooks {
 		$maxHeight = $config->get( 'WDUploadEPMaxHeight' );
 		$maxSizeKB = $config->get( 'WDUploadEPMaxSizeKB' );
 		$titleRE = $config->get( 'WDUploadEPRegExp' );
+		$excludeTitleRE = $config->get( 'WDUploadEPRegExpExclude' );
 
-		if ( preg_match( $titleRE, $title->getText() ) ) {
+		if ( preg_match( $titleRE, $title->getText() ) && !preg_match( $excludeTitleRE, $title->getText() ) ) {
 			// Skup gif or webm
 			if ( preg_match( '/\.(gif|webm)$/i', $title->getText() ) ) {
 				return;
