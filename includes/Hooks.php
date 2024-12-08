@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\WikiDexCustomizations;
 
+use ApiMessage;
 use MediaWiki\MediaWikiServices;
 use MWFileProps;
 use UploadBase;
