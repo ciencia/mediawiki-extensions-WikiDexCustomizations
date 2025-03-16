@@ -141,6 +141,12 @@ class Hooks {
 	 */
 	public static function onUploadVerifyUpload( UploadBase $upload, User $user, $props, $comment, $pageText, &$error ) {
 		// Limitar la subida de archivos grandes como imagenes del anime (por el usuario Fran y sus multis)
+		$config = MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'WikiDexCustomizations' );
+		$titleRE = $config->get( 'WDUploadEPRegExp' );
+		if ( !$titleRE ) {
+			// Not configured
+			return;
+		}
 		if ( !$props ) {
 			$mwProps = new MWFileProps( MediaWikiServices::getInstance()->getMimeAnalyzer() );
 			$props = $mwProps->getPropsFromPath( $upload->getTempPath(), true );
@@ -149,19 +155,21 @@ class Hooks {
 		if ( !$props || !$title ) {
 			return;
 		}
-		if ( $user &&
+		if (
+			$user &&
 			MediaWikiServices::getInstance()->getPermissionManager()->userHasRight( $user, 'wikidex-uploadlimit-exempt' ) )
 		{
 			return;
 		}
-		$config = MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'WikiDexCustomizations' );
+		$excludeTitleRE = $config->get( 'WDUploadEPRegExpExclude' );
 		$maxWidth = $config->get( 'WDUploadEPMaxWidth' );
 		$maxHeight = $config->get( 'WDUploadEPMaxHeight' );
 		$maxSizeKB = $config->get( 'WDUploadEPMaxSizeKB' );
-		$titleRE = $config->get( 'WDUploadEPRegExp' );
-		$excludeTitleRE = $config->get( 'WDUploadEPRegExpExclude' );
 
-		if ( preg_match( $titleRE, $title->getText() ) && !preg_match( $excludeTitleRE, $title->getText() ) ) {
+		if (
+			preg_match( $titleRE, $title->getText() ) &&
+			( !$excludeTitleRE || !preg_match( $excludeTitleRE, $title->getText() ) ) )
+		{
 			// Skup gif or webm
 			if ( preg_match( '/\.(gif|webm)$/i', $title->getText() ) ) {
 				return;
