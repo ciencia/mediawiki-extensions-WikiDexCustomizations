@@ -71,7 +71,8 @@ class UserLinkEnricher {
 			if ( !is_array( $listGroups ) || empty( $listGroups ) ) {
 				return;
 			}
-			$groups = $user->getGroups();
+			$userGroupManager = MediaWikiServices::getInstance()->getUserGroupManager();
+			$groups = $userGroupManager->getUserGroups( $user );
 			$groups = array_intersect( $groups, $listGroups );
 			if ( !empty( $groups ) ) {
 				$newClasses =  ' mw-usergroup-' . implode( ' mw-usergroup-', $groups );
