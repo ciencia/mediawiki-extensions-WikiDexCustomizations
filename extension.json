@@ -1,6 +1,6 @@
 {
 	"name": "WikiDexCustomizations",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"author": [
 		"Jesús Martínez (Ciencia Al Poder)"
 	],
@@ -11,16 +11,22 @@
 	"AutoloadNamespaces": {
 		"MediaWiki\\Extension\\WikiDexCustomizations\\": "includes/"
 	},
+	"HookHandlers": {
+		"default": {
+			"class": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks"
+		}
+	},
 	"Hooks": {
-		"LinkerMakeExternalLink": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onLinkerMakeExternalLink",
-		"HtmlPageLinkRendererBegin": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onHtmlPageLinkRendererBegin",
-		"BeforePageDisplay": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onBeforePageDisplay",
-		"ResourceLoaderGetConfigVars": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onResourceLoaderGetConfigVars",
-		"OutputPageCheckLastModified": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onOutputPageCheckLastModified",
-		"GetCacheVaryCookies": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onGetCacheVaryCookies",
-		"SkinSubPageSubtitle": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onSkinSubPageSubtitle",
-		"UploadVerifyUpload": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onUploadVerifyUpload",
-		"WantedPages::getQueryInfo": "MediaWiki\\Extension\\WikiDexCustomizations\\Hooks::onWantedPagesgetQueryInfo"
+		"LinkerMakeExternalLink": "default",
+		"HtmlPageLinkRendererBegin": "default",
+		"BeforePageDisplay": "default",
+		"ResourceLoaderGetConfigVars": "default",
+		"OutputPageCheckLastModified": "default",
+		"GetCacheVaryCookies": "default",
+		"SkinSubPageSubtitle": "default",
+		"TitleSquidURLs": "default",
+		"UploadVerifyUpload": "default",
+		"WantedPages::getQueryInfo": "default"
 	},
 	"config": {
 		"WDNoExternalHostnameRegExp": {

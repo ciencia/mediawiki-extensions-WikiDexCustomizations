@@ -3,7 +3,20 @@
 namespace MediaWiki\Extension\WikiDexCustomizations;
 
 use ApiMessage;
+use MediaWiki\Config\Config;
+use MediaWiki\Hook\LinkerMakeExternalLinkHook;
+use MediaWiki\Linker\Hook\HtmlPageLinkRendererBeginHook;
+use MediaWiki\Output\Hook\BeforePageDisplayHook;
+use MediaWiki\ResourceLoader\Hook\ResourceLoaderGetConfigVarsHook;
+use MediaWiki\Output\Hook\OutputPageCheckLastModifiedHook;
+use MediaWiki\Output\Hook\GetCacheVaryCookiesHook;
+use MediaWiki\Hook\SkinSubPageSubtitleHook;
+use MediaWiki\Hook\TitleSquidURLsHook;
+use MediaWiki\Hook\UploadVerifyUploadHook;
+use MediaWiki\Hook\WantedPages__getQueryInfoHook;
+use MediaWiki\MainConfigNames;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\Title;
 use MWFileProps;
 use UploadBase;
 use User;
@@ -13,7 +26,18 @@ use User;
  *
  * @license MIT
  */
-class Hooks {
+class Hooks implements
+	LinkerMakeExternalLinkHook,
+	HtmlPageLinkRendererBeginHook,
+	BeforePageDisplayHook,
+	ResourceLoaderGetConfigVarsHook,
+	OutputPageCheckLastModifiedHook,
+	GetCacheVaryCookiesHook,
+	SkinSubPageSubtitleHook,
+	TitleSquidURLsHook,
+	UploadVerifyUploadHook,
+	WantedPages__getQueryInfoHook
+{
 
 	/**
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/LinkerMakeExternalLink
@@ -24,7 +48,7 @@ class Hooks {
 	 * @param string $attribs: Link attributes (added in MediaWiki 1.15, r48223)
 	 * @param string $linktype: Type of external link, e.g. 'free', 'text', 'autonumber'. Gets added to the css classes.
 	 */
-	public static function onLinkerMakeExternalLink( &$url, &$text, &$link, &$attribs, $linktype ) {
+	public function onLinkerMakeExternalLink( &$url, &$text, &$link, &$attribs, $linktype ) {
 		// Display self-host reference links as not-external
 		$elHandler = ExternalLinkHandler::getInstance();
 		$elHandler->handleExternalLink( $url, $attribs );
@@ -42,7 +66,7 @@ class Hooks {
 	 * @param string[] &$query: the query string to add to the generated URL (the bit after the "?"), in associative array form, with keys and values unescaped.
 	 * @param string &$ret: the value to return if your hook returns false.
 	 */
-	public static function onHtmlPageLinkRendererBegin( $linkRenderer, $target, &$text, &$customAttribs, &$query, &$ret ) {
+	public function onHtmlPageLinkRendererBegin( $linkRenderer, $target, &$text, &$customAttribs, &$query, &$ret ) {
 		$ule = UserLinkEnricher::getInstance();
 		$ule->addUserGroupIdentifications( $target, $customAttribs );
 		return true;
@@ -54,10 +78,9 @@ class Hooks {
 	 * @param OutputPage $out - The OutputPage object.
 	 * @param Skin $skin - Skin object that will be used to generate the page, added in 1.13.
 	 */
-	public static function onBeforePageDisplay( &$out, &$skin ) {
+	public function onBeforePageDisplay( $out, $skin ): void {
 		$lmo = LinkAndMetaOutputAdditions::getInstance();
 		$lmo->addOutputLinkAndMeta( $out, $skin );
-		return true;
 	}
 
 	/**
@@ -67,12 +90,11 @@ class Hooks {
 	 * @param Skin $skin - (introduced in 1.32) Current skin name to restrict config variables to a certain skin (if needed)
 	 * @param Config $config - (introduced in 1.34)
 	 */
-	public static function onResourceLoaderGetConfigVars( &$vars, $skin, $config ) {
+	public function onResourceLoaderGetConfigVars( array &$vars, $skin, Config $config ): void {
 		$extConfig = MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'WikiDexCustomizations' );
 		if ( $extConfig->get( 'WDPopulateDiscordInviteUrlJSVar' ) ) {
 			$vars['wgDiscordInviteUrl'] = wfMessage( 'discord-url' )->inContentLanguage()->escaped();
 		}
-		return true;
 	}
 
 	/**
@@ -81,7 +103,7 @@ class Hooks {
 	 * @param array $modifiedTimes: array of timestamps, the following keys are set:
 	 * @param OutputPage $out: OutputPage object
 	 */
-	public static function onOutputPageCheckLastModified( &$modifiedTimes, $out ) {
+	public function onOutputPageCheckLastModified( &$modifiedTimes, $out ) {
 		$config = MediaWikiServices::getInstance()->getMainConfig();
 		if ( $config->get( 'UseCdn' ) ) {
 			// T46570: the core page itself may not change, but resources might
@@ -99,12 +121,14 @@ class Hooks {
 	 * @param OutputPage $out: OutputPage object
 	 * @param array $cookies: array of cookies name, add a value to it if you want to add a cookie that have to vary cache options
 	 */
-	public static function onGetCacheVaryCookies( $out, &$cookies ) {
+	public function onGetCacheVaryCookies( $out, &$cookies ) {
 		// Prevent MobileFrontend from sending cache-control: private on pages with this cookie.
 		// In Varnish we already send Vary: Cookie
+		wfDebugLog( 'ciencia', 'Antes hook onGetCacheVaryCookies: ' . print_r( $cookies, true ) );
 		$cookies = array_filter( $cookies, function( $val ) {
 			return ( $val != "mf_useformat" && $val != "stopMobileRedirect" );
 		} );
+		wfDebugLog( 'ciencia', 'Despues hook onGetCacheVaryCookies: ' . print_r( $cookies, true ) );
 	}
 
 	/**
@@ -114,12 +138,48 @@ class Hooks {
 	 * @param Skin $skin: Skin object (since 1.17.0)
 	 * @param OutputPage $out: OutputPage object (since 1.21)
 	 */
-	public static function onSkinSubPageSubtitle( &$subpages, $skin, $out ) {
+	public function onSkinSubPageSubtitle( &$subpages, $skin, $out ) {
 		// Remove automatic subpage links on NS_MAIN without changing wgNamespacesWithSubpages
 		// Some pages like guides use {{SUBPAGENAME}} and similar, wich won't work if wgNamespacesWithSubpages disables it
 		$title = $out->getTitle();
 		if ( $title->getNamespace() == NS_MAIN ) {
 			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/TitleSquidURLs
+	 *
+	 * @param Title $title
+	 * @param string[] $urls
+	 */
+	public function onTitleSquidURLs( $title, &$urls ) {
+		if ( ! $title ) {
+			return true;
+		}
+		$mainConfig = MediaWikiServices::getInstance()->getMainConfig();
+		$wgScriptPath = $mainConfig->get( MainConfigNames::ScriptPath );
+		$wgDefaultSkin = $mainConfig->get( MainConfigNames::DefaultSkin );
+		$wgLanguageCode = $mainConfig->get( MainConfigNames::LanguageCode );
+		// Gadget definitions and gadget scripts
+		// Site scripts
+		if (
+			$title->getPrefixedText() == 'MediaWiki:Gadgets-definition' ||
+			strpos( $title->getPrefixedText(), 'MediaWiki:Gadget-' ) === 0 ||
+			$title->getPrefixedText() == 'MediaWiki:Common.js' ||
+			$title->getPrefixedText() == sprintf( 'MediaWiki:%s.js', ucfirst( $wgDefaultSkin ) ) )
+		{
+			// Purge the startup module
+			$urls[] = wfExpandUrl( "{$wgScriptPath}/load.php?lang={$wgLanguageCode}&modules=startup&only=scripts&raw=1&skin={$wgDefaultSkin}", PROTO_INTERNAL );
+		}
+		// Site styles
+		if (
+			$title->getPrefixedText() == 'MediaWiki:Common.css' ||
+			$title->getPrefixedText() == sprintf( 'MediaWiki:%s.css', ucfirst( $wgDefaultSkin ) ) )
+		{
+			// Purge site styles entry point
+			$urls[] = wfExpandUrl( "{$wgScriptPath}/load.php?lang={$wgLanguageCode}&modules=site.styles&only=styles&skin={$wgDefaultSkin}", PROTO_INTERNAL );
 		}
 		return true;
 	}
@@ -139,7 +199,7 @@ class Hooks {
 	 *                    or a MessageSpecifier instance. You might want to use ApiMessage to provide
 	 *                    machine-readable details for the API.
 	 */
-	public static function onUploadVerifyUpload( UploadBase $upload, User $user, $props, $comment, $pageText, &$error ) {
+	public function onUploadVerifyUpload( UploadBase $upload, User $user, $props, $comment, $pageText, &$error ) {
 		// Limitar la subida de archivos grandes como imagenes del anime (por el usuario Fran y sus multis)
 		$config = MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'WikiDexCustomizations' );
 		$titleRE = $config->get( 'WDUploadEPRegExp' );
@@ -190,7 +250,7 @@ class Hooks {
 	 * @param WantedPagesPage $wantedPages: WantedPagesPage object
 	 * @param array &$query: query array, see QueryPage::getQueryInfo() for format documentation
 	 */
-	public static function onWantedPagesgetQueryInfo( &$wantedPages, &$query ) {
+	public function onWantedPages__getQueryInfo( $wantedPages, &$query ) {
 		// Make WantedPages list only content namespaces instead of everything
 		$config = MediaWikiServices::getInstance()->getMainConfig();
 		// Remove condition 'pg2.page_namespace != ' . $dbr->addQuotes( NS_MEDIAWIKI ),
