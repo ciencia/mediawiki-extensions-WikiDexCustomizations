@@ -124,11 +124,9 @@ class Hooks implements
 	public function onGetCacheVaryCookies( $out, &$cookies ) {
 		// Prevent MobileFrontend from sending cache-control: private on pages with this cookie.
 		// In Varnish we already send Vary: Cookie
-		wfDebugLog( 'ciencia', 'Antes hook onGetCacheVaryCookies: ' . print_r( $cookies, true ) );
 		$cookies = array_filter( $cookies, function( $val ) {
 			return ( $val != "mf_useformat" && $val != "stopMobileRedirect" );
 		} );
-		wfDebugLog( 'ciencia', 'Despues hook onGetCacheVaryCookies: ' . print_r( $cookies, true ) );
 	}
 
 	/**
