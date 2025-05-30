@@ -158,7 +158,7 @@ class Hooks implements
 		}
 		$mainConfig = MediaWikiServices::getInstance()->getMainConfig();
 		$wgScriptPath = $mainConfig->get( MainConfigNames::ScriptPath );
-		$wgDefaultSkin = $mainConfig->get( MainConfigNames::DefaultSkin );
+		$wgDefaultSkin = strtolower( $mainConfig->get( MainConfigNames::DefaultSkin ) );
 		$wgLanguageCode = $mainConfig->get( MainConfigNames::LanguageCode );
 		// Gadget definitions and gadget scripts
 		// Site scripts
